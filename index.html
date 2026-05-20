@@ -6,128 +6,112 @@
     <title>보건실 스마트 키오스크</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', 'Malgun Gothic', sans-serif; overflow-x: hidden; }
-        .symptom-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border-width: 2px; }
-        .symptom-btn.active { border-color: #f43f5e; background-color: #fff1f2; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(244, 63, 94, 0.2); }
-        .status-completed { opacity: 0.5; background-color: #f8fafc; text-decoration: line-through; }
-        @media print { .no-print { display: none; } }
+        body { font-family: 'Inter', 'Malgun Gothic', sans-serif; }
+        .symptom-btn.active { border-color: #ef4444; background-color: #fff1f2; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .status-completed { opacity: 0.6; background-color: #f8fafc; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
 
 <div id="app" class="max-w-4xl mx-auto p-4 md:p-8">
-    <!-- Header -->
-    <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <header class="flex justify-between items-center mb-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
         <div class="flex items-center gap-3">
-            <div class="bg-rose-500 text-white p-3 rounded-xl shadow-lg shadow-rose-200">
+            <div class="bg-rose-500 text-white p-3 rounded-xl">
                 <i class="fas fa-plus-square text-2xl"></i>
             </div>
             <div>
                 <h1 class="text-xl md:text-2xl font-bold text-slate-900">보건실 스마트 키오스크</h1>
-                <p class="text-xs md:text-sm text-slate-500" id="current-time">시간 로딩 중...</p>
+                <p class="text-xs text-slate-500" id="current-time">로딩 중...</p>
             </div>
         </div>
-        <button id="toggle-mode-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold transition-colors no-print">
+        <button id="toggle-admin-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
             <i class="fas fa-lock-open mr-2"></i>선생님 모드
         </button>
     </header>
 
-    <!-- Student View -->
     <main id="student-view" class="space-y-6">
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
-            <div class="bg-rose-500 p-8 text-white text-center">
-                <h2 class="text-3xl font-bold mb-2">안녕하세요! 👋</h2>
-                <p class="opacity-90">방문 목적과 정보를 입력해 주세요.</p>
+            <div class="bg-rose-500 p-6 text-white text-center">
+                <h2 class="text-2xl font-bold mb-1">방문을 환영합니다!</h2>
+                <p class="opacity-90 text-sm">정보를 입력하고 접수 버튼을 눌러주세요.</p>
             </div>
             
-            <div class="p-8 space-y-8">
-                <!-- Identification -->
-                <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="p-6 md:p-8 space-y-6">
+                <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div>
-                        <label class="block text-sm font-semibold mb-2 ml-1">학년</label>
+                        <label class="block text-sm font-semibold mb-2 ml-1 text-slate-600">학년</label>
                         <select id="s-grade" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none">
-                            <option value="1">1학년</option>
-                            <option value="2">2학년</option>
-                            <option value="3">3학년</option>
+                            <option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold mb-2 ml-1">반</label>
+                        <label class="block text-sm font-semibold mb-2 ml-1 text-slate-600">반</label>
                         <input id="s-class" type="number" placeholder="반" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold mb-2 ml-1">번호</label>
+                        <label class="block text-sm font-semibold mb-2 ml-1 text-slate-600">번호</label>
                         <input id="s-number" type="number" placeholder="번호" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold mb-2 ml-1">이름</label>
+                        <label class="block text-sm font-semibold mb-2 ml-1 text-slate-600">이름</label>
                         <input id="s-name" type="text" placeholder="이름" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none">
                     </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="block text-sm font-semibold mb-2 ml-1 text-slate-600">전화번호</label>
+                        <input id="s-phone" type="tel" placeholder="010-0000-0000" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none">
+                    </div>
                 </section>
 
-                <!-- Updated Symptoms Grid (8 Items) -->
                 <section>
-                    <label class="block text-sm font-semibold mb-4 ml-1">주요 증상 (해당되는 것을 눌러주세요)</label>
+                    <label class="block text-sm font-semibold mb-4 ml-1 text-slate-600">주요 증상 선택 (7가지)</label>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="symptoms-grid">
-                        <button onclick="selectSymptom('두통/어지러움', this)" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2">
-                            <i class="fas fa-head-side-virus text-2xl text-rose-400"></i><span class="font-semibold text-xs">두통/어지러움</span>
+                        <button onclick="selectSymptom(this, '두통')" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2 transition-all">
+                            <i class="fas fa-head-side-virus text-2xl text-rose-400"></i><span class="font-semibold text-xs">두통/어지럼</span>
                         </button>
-                        <button onclick="selectSymptom('복통/소화불량', this)" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2">
+                        <button onclick="selectSymptom(this, '복통')" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2 transition-all">
                             <i class="fas fa-stomach text-2xl text-rose-400"></i><span class="font-semibold text-xs">복통/소화불량</span>
                         </button>
-                        <button onclick="selectSymptom('발열/감기', this)" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2">
+                        <button onclick="selectSymptom(this, '감기')" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2 transition-all">
                             <i class="fas fa-temperature-high text-2xl text-rose-400"></i><span class="font-semibold text-xs">발열/감기</span>
                         </button>
-                        <button onclick="selectSymptom('상처/출혈', this)" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2">
+                        <button onclick="selectSymptom(this, '외상')" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2 transition-all">
                             <i class="fas fa-band-aid text-2xl text-rose-400"></i><span class="font-semibold text-xs">상처/출혈</span>
                         </button>
-                        <button onclick="selectSymptom('타박상/근육통', this)" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2">
-                            <i class="fas fa-crutches text-2xl text-rose-400"></i><span class="font-semibold text-xs">타박상/근육통</span>
+                        <button onclick="selectSymptom(this, '근육통')" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2 transition-all">
+                            <i class="fas fa-crutch text-2xl text-rose-400"></i><span class="font-semibold text-xs">근육통/타박상</span>
                         </button>
-                        <button onclick="selectSymptom('눈/코/목 통증', this)" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2">
-                            <i class="fas fa-eye-dropper text-2xl text-rose-400"></i><span class="font-semibold text-xs">눈/코/목 통증</span>
+                        <button onclick="selectSymptom(this, '눈/코/목')" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2 transition-all">
+                            <i class="fas fa-eye text-2xl text-rose-400"></i><span class="font-semibold text-xs">눈/코/목 통증</span>
                         </button>
-                        <button onclick="selectSymptom('화상', this)" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2">
-                            <i class="fas fa-fire-alt text-2xl text-rose-400"></i><span class="font-semibold text-xs">화상</span>
-                        </button>
-                        <button onclick="selectSymptom('상담/기타', this)" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2">
-                            <i class="fas fa-comment-medical text-2xl text-rose-400"></i><span class="font-semibold text-xs">상담/기타</span>
+                        <button onclick="selectSymptom(this, '피부/알러지')" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2 transition-all">
+                            <i class="fas fa-allergies text-2xl text-rose-400"></i><span class="font-semibold text-xs">피부/알러지/기타</span>
                         </button>
                     </div>
                 </section>
 
                 <section>
-                    <label class="block text-sm font-semibold mb-2 ml-1">상세 내용 (자세히 적어주면 좋아요)</label>
-                    <textarea id="s-detail" rows="3" placeholder="예: 아까 체육 시간에 넘어져서 무릎에서 피가 나요." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none resize-none"></textarea>
+                    <label class="block text-sm font-semibold mb-2 ml-1 text-slate-600">상세 내용 (선택사항)</label>
+                    <textarea id="s-detail" rows="2" placeholder="자세한 증상을 입력해 주세요." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none resize-none"></textarea>
                 </section>
 
-                <button id="submit-btn" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-6 rounded-2xl text-xl shadow-lg transition-all flex justify-center items-center gap-3">
-                    <i class="fas fa-paper-plane"></i> 접수하기
+                <button id="submit-btn" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-5 rounded-2xl text-xl shadow-lg shadow-rose-100 transition-all active:scale-[0.98]">
+                    <i class="fas fa-paper-plane mr-2"></i> 접수하기
                 </button>
             </div>
         </div>
     </main>
 
-    <!-- Admin View -->
-    <main id="admin-view" class="hidden space-y-6">
+    <main id="admin-view" class="hidden space-y-4">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-            <h2 class="text-xl font-bold">실시간 진료 대기 명단</h2>
-            <div class="flex flex-wrap gap-2 no-print justify-center">
-                <button id="show-qr-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
-                    <i class="fas fa-qrcode"></i> QR코드
-                </button>
+            <h2 class="text-xl font-bold">실시간 진료 현황</h2>
+            <div class="flex gap-2">
                 <button id="export-btn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
                     <i class="fas fa-file-excel"></i> 엑셀 저장
                 </button>
-                <button id="refresh-btn" class="bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">
-                    <i class="fas fa-sync-alt"></i> 새로고침
-                </button>
             </div>
         </div>
-
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
@@ -136,276 +120,220 @@
                             <th class="p-4 font-semibold text-xs text-slate-500">시간</th>
                             <th class="p-4 font-semibold text-xs text-slate-500">학적</th>
                             <th class="p-4 font-semibold text-xs text-slate-500">이름</th>
+                            <th class="p-4 font-semibold text-xs text-slate-500">전화번호</th>
                             <th class="p-4 font-semibold text-xs text-slate-500">증상</th>
-                            <th class="p-4 font-semibold text-xs text-slate-500">상세내용</th>
                             <th class="p-4 font-semibold text-xs text-slate-500 text-center">관리</th>
                         </tr>
                     </thead>
-                    <tbody id="visit-list" class="divide-y divide-slate-100">
-                        <!-- Data populated by JS -->
-                    </tbody>
+                    <tbody id="visit-list" class="divide-y divide-slate-100"></tbody>
                 </table>
-            </div>
-            <div id="empty-state" class="p-20 text-center text-slate-400">
-                <i class="fas fa-inbox text-5xl mb-4 opacity-20"></i>
-                <p>현재 접수된 학생이 없습니다.</p>
             </div>
         </div>
     </main>
 </div>
 
-<!-- Modal -->
-<div id="modal-container" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
-        <div id="modal-icon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"></div>
+<div id="modal-container" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl scale-95 transition-all">
+        <div id="modal-icon" class="w-20 h-20 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+            <i class="fas fa-check"></i>
+        </div>
         <h3 id="modal-title" class="text-xl font-bold mb-2"></h3>
-        <p id="modal-desc" class="text-slate-500 mb-6"></p>
-        <div id="qr-display" class="hidden mb-6 flex justify-center bg-white p-2 border rounded-xl"></div>
-        <button id="modal-close-btn" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors">확인</button>
+        <p id="modal-desc" class="text-slate-500 text-sm mb-6 whitespace-pre-line"></p>
+        <button id="modal-close-btn" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all">확인</button>
     </div>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, where, getDocs, orderBy, limit, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-/** 
- * [중요] 아래 YOUR_... 부분들을 선생님의 Firebase 실제 값으로 교체해야 에러 없이 작동합니다.
- */
-const firebaseConfig = {
-    apiKey: "AIzaSyBUu_5MgiuERaSMgRGDNbpKg3UUFA-M7y8",
-    authDomain: "school-kiosk-290e2.firebaseapp.com",
-    projectId: "school-kiosk-290e2",
-    storageBucket: "school-kiosk-290e2.firebasestorage.app",
-    messagingSenderId: "505429018298",
-    appId: "1:505429018298:web:caead134d2973f0861a483"
-};
+    // ==========================================================
+    // [중요] 선생님의 실제 키값으로 교체해 주세요!
+    // ==========================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyBUu_5MgiuERaSMgRGDNbpKg3UUFA-M7y8",
+        authDomain: "school-kiosk-290e2.firebaseapp.com",
+        projectId: "school-kiosk-290e2",
+        storageBucket: "school-kiosk-290e2.firebasestorage.app",
+        messagingSenderId: "505429018298",
+        appId: "1:505429018298:web:caead134d2973f0861a483"
+    };
+    // ==========================================================
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const appId = 'health-office-kiosk';
 
-const ADMIN_PASSWORD = "01030387895";
-const appId = 'health-office-kiosk';
+    let currentSymptom = "";
+    let visits = [];
 
-let visitsData = [];
-let selectedSymptom = "";
-let currentUserId = null;
+    signInAnonymously(auth).catch(err => console.error("인증 에러:", err));
+    onAuthStateChanged(auth, (user) => { if (user) listenToVisits(); });
 
-// Update Clock
-function updateClock() {
-    const timeEl = document.getElementById('current-time');
-    if (timeEl) {
-        timeEl.innerText = new Date().toLocaleString('ko-KR', {
-            month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit'
-        });
-    }
-}
-
-// Symptom Selection
-window.selectSymptom = function(name, btn) {
-    selectedSymptom = name;
-    document.querySelectorAll('.symptom-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-};
-
-// Modal Logic
-function showModal(title, desc, type, showQR = false) {
-    const modal = document.getElementById('modal-container');
-    const titleEl = document.getElementById('modal-title');
-    const descEl = document.getElementById('modal-desc');
-    const iconEl = document.getElementById('modal-icon');
-    const qrEl = document.getElementById('qr-display');
-
-    if (!modal) return;
-
-    titleEl.innerText = title;
-    descEl.innerText = desc;
-    qrEl.classList.toggle('hidden', !showQR);
-
-    if (type === 'success') {
-        iconEl.className = "w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl";
-        iconEl.innerHTML = '<i class="fas fa-check"></i>';
-    } else if (type === 'error') {
-        iconEl.className = "w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl";
-        iconEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-    } else {
-        iconEl.className = "w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl";
-        iconEl.innerHTML = '<i class="fas fa-qrcode"></i>';
-    }
-
-    if (showQR) {
-        qrEl.innerHTML = "";
-        new QRCode(qrEl, { text: window.location.href, width: 160, height: 160 });
-    }
-
-    modal.classList.remove('hidden');
-}
-
-// Toggle Mode with Password
-window.toggleMode = function() {
-    const adminView = document.getElementById('admin-view');
-    const studentView = document.getElementById('student-view');
-    const toggleBtn = document.getElementById('toggle-mode-btn');
-
-    if (!adminView || !studentView || !toggleBtn) return;
-
-    if (adminView.classList.contains('hidden')) {
-        const pw = prompt("선생님 비밀번호를 입력하세요.");
-        if (pw === ADMIN_PASSWORD) {
-            adminView.classList.remove('hidden');
-            studentView.classList.add('hidden');
-            toggleBtn.innerHTML = '<i class="fas fa-user-graduate mr-2"></i>학생 모드';
-        } else if (pw !== null) {
-            showModal("접근 차단", "비밀번호가 올바르지 않습니다.", "error");
-        }
-    } else {
-        adminView.classList.add('hidden');
-        studentView.classList.remove('hidden');
-        toggleBtn.innerHTML = '<i class="fas fa-lock-open mr-2"></i>선생님 모드';
-    }
-};
-
-async function submitVisit() {
-    const grade = document.getElementById('s-grade').value;
-    const classNum = document.getElementById('s-class').value;
-    const num = document.getElementById('s-number').value;
-    const name = document.getElementById('s-name').value;
-    const detail = document.getElementById('s-detail').value;
-
-    if (!classNum || !num || !name || !selectedSymptom) {
-        showModal("입력 확인", "모든 정보를 입력하고 증상을 선택해 주세요.", "error");
-        return;
-    }
-
-    const btn = document.getElementById('submit-btn');
-    btn.disabled = true;
-    btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> 접수 중...`;
-
-    try {
-        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'visits'), {
-            grade, classNum, num, name,
-            symptom: selectedSymptom,
-            detail: detail || "내용 없음",
-            status: 'waiting',
-            timestamp: Timestamp.now()
-        });
-        showModal("접수 완료", "보건 선생님을 잠시만 기다려 주세요!", "success");
-        // Reset
-        document.getElementById('s-class').value = "";
-        document.getElementById('s-number').value = "";
-        document.getElementById('s-name').value = "";
-        document.getElementById('s-detail').value = "";
-        selectedSymptom = "";
+    window.selectSymptom = (btn, symptom) => {
         document.querySelectorAll('.symptom-btn').forEach(b => b.classList.remove('active'));
-    } catch (e) {
-        showModal("오류 발생", "Firebase 설정이 올바른지 확인해 주세요.", "error");
-        console.error(e);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<i class="fas fa-paper-plane"></i> 접수하기`;
-    }
-}
+        btn.classList.add('active');
+        currentSymptom = symptom;
+    };
 
-// Data Handling
-window.completeVisit = async (id) => {
-    try {
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'visits', id), { status: 'completed' });
-    } catch (e) { console.error(e); }
-};
+    document.getElementById('submit-btn').onclick = async () => {
+        const grade = document.getElementById('s-grade').value;
+        const classNum = document.getElementById('s-class').value;
+        const number = document.getElementById('s-number').value;
+        const name = document.getElementById('s-name').value;
+        const phone = document.getElementById('s-phone').value;
+        const detail = document.getElementById('s-detail').value;
 
-window.deleteVisit = async (id) => {
-    if (confirm("이 기록을 삭제할까요?")) {
-        try {
-            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'visits', id));
-        } catch (e) { console.error(e); }
-    }
-};
-
-// Render List
-function renderList() {
-    const listBody = document.getElementById('visit-list');
-    const emptyState = document.getElementById('empty-state');
-    if (!listBody) return;
-
-    listBody.innerHTML = "";
-    if (visitsData.length === 0) {
-        emptyState.classList.remove('hidden');
-        return;
-    }
-    emptyState.classList.add('hidden');
-
-    visitsData.forEach(v => {
-        const time = v.timestamp ? v.timestamp.toDate().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : "-";
-        const isComp = v.status === 'completed';
-        const tr = document.createElement('tr');
-        tr.className = `hover:bg-slate-50 transition-colors ${isComp ? 'status-completed' : ''}`;
-        tr.innerHTML = `
-            <td class="p-4 text-xs text-slate-500">${time}</td>
-            <td class="p-4 text-sm font-semibold">${v.grade}학년 ${v.classNum}반 ${v.num}번</td>
-            <td class="p-4 text-sm font-bold">${v.name}</td>
-            <td class="p-4"><span class="px-2 py-1 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600">${v.symptom}</span></td>
-            <td class="p-4 text-sm text-slate-600 max-w-[150px] truncate">${v.detail}</td>
-            <td class="p-4 text-center">
-                <div class="flex justify-center gap-2">
-                    ${isComp ? '<span class="text-emerald-500 text-xs font-bold">완료</span>' : `<button onclick="completeVisit('${v.id}')" class="text-indigo-600 font-bold text-xs">완료처리</button>`}
-                    <button onclick="deleteVisit('${v.id}')" class="text-slate-300 hover:text-rose-500"><i class="fas fa-trash-alt"></i></button>
-                </div>
-            </td>
-        `;
-        listBody.appendChild(tr);
-    });
-}
-
-window.onload = () => {
-    updateClock();
-    setInterval(updateClock, 1000);
-
-    // Event Listeners with Null Checks to prevent "Cannot set properties of null"
-    const toggleBtn = document.getElementById('toggle-mode-btn');
-    if (toggleBtn) toggleBtn.onclick = window.toggleMode;
-
-    const submitBtn = document.getElementById('submit-btn');
-    if (submitBtn) submitBtn.onclick = submitVisit;
-
-    const closeBtn = document.getElementById('modal-close-btn');
-    if (closeBtn) closeBtn.onclick = () => document.getElementById('modal-container').classList.add('hidden');
-
-    const qrBtn = document.getElementById('show-qr-btn');
-    if (qrBtn) qrBtn.onclick = () => showModal("학생 접수용 QR", "학생들이 스캔하여 접속하도록 안내해 주세요.", "info", true);
-
-    const exportBtn = document.getElementById('export-btn');
-    if (exportBtn) exportBtn.onclick = exportToExcel;
-
-    // Firebase Auth & Listen
-    signInAnonymously(auth).catch(e => console.error("Auth Error:", e));
-    
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            const qRef = query(collection(db, 'artifacts', appId, 'public', 'data', 'visits'), orderBy('timestamp', 'desc'));
-            onSnapshot(qRef, (snap) => {
-                visitsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderList();
-            });
+        if (!classNum || !number || !name || !currentSymptom || !phone) {
+            return showModal("입력 부족", "전화번호를 포함한 모든 정보를 입력해 주세요.", "error");
         }
-    });
-};
 
-function exportToExcel() {
-    if (visitsData.length === 0) return alert("데이터가 없습니다.");
-    let csv = "\uFEFF날짜,시간,학적,이름,증상,상세내용,상태\n";
-    visitsData.forEach(v => {
-        const d = v.timestamp.toDate();
-        csv += `${d.toLocaleDateString()},${d.toLocaleTimeString()},${v.grade}학년 ${v.classNum}반 ${v.num}번,${v.name},${v.symptom},"${v.detail.replace(/"/g, '""')}",${v.status === 'completed' ? '완료' : '대기'}\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `보건실_기록_${new Date().toLocaleDateString()}.csv`;
-    a.click();
-}
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        btn.innerText = "처리 중...";
+
+        try {
+            const visitRef = collection(db, 'artifacts', appId, 'public', 'data', 'visits');
+            const q = query(
+                visitRef, 
+                where('grade', '==', grade),
+                where('classNum', '==', classNum),
+                where('number', '==', number),
+                where('name', '==', name),
+                orderBy('timestamp', 'desc'),
+                limit(1)
+            );
+
+            const querySnapshot = await getDocs(q);
+            
+            if (!querySnapshot.empty) {
+                const lastVisit = querySnapshot.docs[0].data();
+                const diffMin = Math.floor((Date.now() - lastVisit.timestamp.toMillis()) / (1000 * 60));
+
+                if (lastVisit.status === 'waiting') {
+                    showModal("이미 접수됨", `${name} 학생은 현재 대기 중입니다.`, "error");
+                    resetBtn(); return;
+                }
+
+                if (diffMin < 60) {
+                    showModal("알림: 재방문", "1시간 이내에 다시 방문하셨네요.\n부모님께 증상을 알리고 병원 진료를 권장합니다.", "success");
+                }
+            }
+
+            await addDoc(visitRef, {
+                grade, classNum, number, name, phone,
+                symptom: currentSymptom,
+                detail: detail || "",
+                status: 'waiting',
+                timestamp: Timestamp.now()
+            });
+
+            if(document.getElementById('modal-container').classList.contains('hidden')) {
+                showModal("접수 완료", "보건 선생님께 접수되었습니다.", "success");
+            }
+            resetForm();
+        } catch (e) {
+            console.error(e);
+            showModal("색인 설정 필요", "데이터 조회 설정(Index)이 필요합니다.\n콘솔의 에러 링크를 확인해 주세요.", "error");
+        } finally {
+            resetBtn();
+        }
+    };
+
+    function listenToVisits() {
+        const visitRef = collection(db, 'artifacts', appId, 'public', 'data', 'visits');
+        const q = query(visitRef, orderBy('timestamp', 'desc'), limit(50));
+        onSnapshot(q, (snapshot) => {
+            visits = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderVisits();
+        });
+    }
+
+    function renderVisits() {
+        const list = document.getElementById('visit-list');
+        list.innerHTML = visits.length ? '' : '<tr><td colspan="6" class="p-10 text-center text-slate-400">접수 내역이 없습니다.</td></tr>';
+        
+        visits.forEach(v => {
+            const time = v.timestamp.toDate().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
+            const tr = document.createElement('tr');
+            if (v.status === 'completed') tr.className = 'status-completed';
+            
+            tr.innerHTML = `
+                <td class="p-4 text-[10px] text-slate-400">${time}</td>
+                <td class="p-4 text-sm font-medium">${v.grade}-${v.classNum}-${v.number}</td>
+                <td class="p-4 text-sm font-bold">${v.name}</td>
+                <td class="p-4 text-sm text-slate-500">${v.phone}</td>
+                <td class="p-4"><span class="px-2 py-1 bg-rose-50 text-rose-600 text-[10px] rounded-md font-bold">${v.symptom}</span></td>
+                <td class="p-4 text-center">
+                    <div class="flex justify-center gap-3">
+                        <button onclick="toggleStatus('${v.id}', '${v.status}')" class="text-xs font-bold ${v.status==='completed' ? 'text-slate-400' : 'text-indigo-600'}">
+                            ${v.status==='completed' ? '복구' : '완료'}
+                        </button>
+                        <button onclick="deleteEntry('${v.id}')" class="text-slate-300 hover:text-rose-500"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            `;
+            list.appendChild(tr);
+        });
+    }
+
+    window.toggleStatus = async (id, status) => {
+        const newStatus = status === 'completed' ? 'waiting' : 'completed';
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'visits', id), { status: newStatus });
+    };
+
+    window.deleteEntry = async (id) => {
+        if(confirm("삭제하시겠습니까?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'visits', id));
+    };
+
+    function showModal(title, desc, type) {
+        const modal = document.getElementById('modal-container');
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-desc').innerText = desc;
+        const iconWrap = document.getElementById('modal-icon');
+        iconWrap.innerHTML = type === 'error' ? '<i class="fas fa-exclamation"></i>' : '<i class="fas fa-check"></i>';
+        iconWrap.className = type === 'error' ? "w-20 h-20 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl" : "w-20 h-20 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl";
+        modal.classList.remove('hidden');
+    }
+
+    document.getElementById('modal-close-btn').onclick = () => document.getElementById('modal-container').classList.add('hidden');
+
+    function resetForm() {
+        ['s-class', 's-number', 's-name', 's-phone', 's-detail'].forEach(id => document.getElementById(id).value = '');
+        currentSymptom = "";
+        document.querySelectorAll('.symptom-btn').forEach(b => b.classList.remove('active'));
+    }
+
+    function resetBtn() {
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> 접수하기';
+    }
+
+    document.getElementById('toggle-admin-btn').onclick = () => {
+        const pass = prompt("관리자 비밀번호를 입력하세요.");
+        if(pass === "01030387895") {
+            document.getElementById('student-view').classList.toggle('hidden');
+            document.getElementById('admin-view').classList.toggle('hidden');
+        } else { alert("비밀번호 오류"); }
+    };
+
+    document.getElementById('export-btn').onclick = () => {
+        let csv = "\uFEFF날짜,시간,학적,이름,전화번호,증상,상태\n";
+        visits.forEach(v => {
+            const d = v.timestamp.toDate();
+            csv += `${d.toLocaleDateString()},${d.toLocaleTimeString()},${v.grade}-${v.classNum}-${v.number},${v.name},${v.phone},${v.symptom},${v.status}\n`;
+        });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+        link.download = `보건실_기록.csv`;
+        link.click();
+    };
+
+    setInterval(() => { document.getElementById('current-time').innerText = new Date().toLocaleString(); }, 1000);
+
 </script>
 </body>
 </html>
