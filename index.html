@@ -6,6 +6,7 @@
     <title>보건실 스마트 키오스크</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QR 생성 라이브러리 포함 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -108,7 +109,6 @@
     </main>
 
     <main id="admin-view" class="hidden space-y-6">
-        <!-- QR 코드 표시 카드 -->
         <div class="bg-indigo-600 rounded-3xl p-8 text-white flex flex-col md:flex-row items-center gap-8 shadow-xl">
             <div id="qrcode" class="bg-white p-2 rounded-2xl shadow-inner"></div>
             <div class="text-center md:text-left">
@@ -168,7 +168,6 @@
 
     // ------------------------------------------------------------------
     // [중요] 선생님의 실제 키값으로 교체해 주세요! (GitHub 업데이트 시 확인)
-    // ------------------------------------------------------------------
     const firebaseConfig = {
         apiKey: "AIzaSyBUu_5MgiuERaSMgRGDNbpKg3UUFA-M7y8",
         authDomain: "school-kiosk-290e2.firebaseapp.com",
@@ -187,18 +186,15 @@
     let currentSymptom = "";
     let visits = [];
 
-    // 인증 및 초기 데이터 감시
     signInAnonymously(auth).catch(err => console.error("인증 에러:", err));
     onAuthStateChanged(auth, (user) => { if (user) listenToVisits(); });
 
-    // 증상 선택 처리
     window.selectSymptom = (btn, symptom) => {
         document.querySelectorAll('.symptom-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentSymptom = symptom;
     };
 
-    // 접수하기 로직
     document.getElementById('submit-btn').onclick = async () => {
         const grade = document.getElementById('s-grade').value;
         const classNum = document.getElementById('s-class').value;
@@ -218,34 +214,37 @@
         try {
             const visitRef = collection(db, 'artifacts', appId, 'public', 'data', 'visits');
             
-            // 중복 및 재방문 체크 쿼리
-            const q = query(
-                visitRef, 
-                where('grade', '==', grade),
-                where('classNum', '==', classNum),
-                where('number', '==', number),
-                where('name', '==', name),
-                orderBy('timestamp', 'desc'),
-                limit(1)
-            );
-
+            // 색인 에러 방지를 위해 단순하게 이름으로만 조회 (성능상 무리 없음)
+            const q = query(visitRef, where('name', '==', name), limit(10));
             const querySnapshot = await getDocs(q);
             
-            if (!querySnapshot.empty) {
-                const lastVisit = querySnapshot.docs[0].data();
-                const diffMin = Math.floor((Date.now() - lastVisit.timestamp.toMillis()) / (1000 * 60));
+            let alreadyWaiting = false;
+            let lastVisitTime = null;
 
-                if (lastVisit.status === 'waiting') {
-                    showModal("이미 접수됨", `${name} 학생은 현재 대기 중입니다.`, "error");
-                    resetBtn(); return;
+            querySnapshot.forEach((doc) => {
+                const d = doc.data();
+                // 학적까지 일치하는지 클라이언트 사이드에서 체크 (서버 색인 필요 없음)
+                if(d.grade == grade && d.classNum == classNum && d.number == number) {
+                    if(d.status === 'waiting') alreadyWaiting = true;
+                    if(!lastVisitTime || d.timestamp.toMillis() > lastVisitTime) {
+                        lastVisitTime = d.timestamp.toMillis();
+                    }
                 }
+            });
 
+            if (alreadyWaiting) {
+                showModal("이미 접수됨", `${name} 학생은 현재 대기 중입니다.`, "error");
+                resetBtn(); return;
+            }
+
+            if (lastVisitTime) {
+                const diffMin = Math.floor((Date.now() - lastVisitTime) / (1000 * 60));
                 if (diffMin < 60) {
-                    showModal("알림: 재방문 권고", "1시간 이내에 다시 방문하셨네요.\n꼭 부모님께 현재 상태를 말씀드리고 병원 방문을 권장합니다.", "success");
+                    showModal("알림: 재방문 권고", "1시간 이내에 다시 방문하셨네요.\n꼭 부모님께 현재 건강 상태를 말씀드리고 병원 방문을 권장합니다.", "success");
+                    // 경고는 띄우되 접수는 진행함 (중요하므로)
                 }
             }
 
-            // 데이터 저장
             await addDoc(visitRef, {
                 grade, classNum, number, name, phone,
                 symptom: currentSymptom,
@@ -260,13 +259,12 @@
             resetForm();
         } catch (e) {
             console.error(e);
-            showModal("에러 발생", "데이터를 처리할 수 없습니다. \n(Firebase 색인 설정이 필요할 수 있습니다.)", "error");
+            showModal("에러 발생", "데이터를 처리할 수 없습니다.\nFirebase 규칙과 익명 로그인을 확인해 주세요.", "error");
         } finally {
             resetBtn();
         }
     };
 
-    // 실시간 데이터 감시
     function listenToVisits() {
         const visitRef = collection(db, 'artifacts', appId, 'public', 'data', 'visits');
         const q = query(visitRef, orderBy('timestamp', 'desc'), limit(50));
@@ -276,7 +274,6 @@
         });
     }
 
-    // 목록 렌더링
     function renderVisits() {
         const list = document.getElementById('visit-list');
         list.innerHTML = visits.length ? '' : '<tr><td colspan="6" class="p-10 text-center text-slate-400">접수 내역이 없습니다.</td></tr>';
@@ -314,7 +311,6 @@
         if(confirm("기록을 삭제하시겠습니까?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'visits', id));
     };
 
-    // 모달 표시
     function showModal(title, desc, type) {
         const modal = document.getElementById('modal-container');
         document.getElementById('modal-title').innerText = title;
@@ -339,37 +335,26 @@
         btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> 접수하기';
     }
 
-    // 선생님 모드 전환 & QR 생성
     let qrcodeInstance = null;
     document.getElementById('toggle-admin-btn').onclick = () => {
         const pass = prompt("관리자 비밀번호를 입력하세요.");
         if(pass === "01030387895") {
             const isStudentView = !document.getElementById('student-view').classList.contains('hidden');
-            
             document.getElementById('student-view').classList.toggle('hidden');
             document.getElementById('admin-view').classList.toggle('hidden');
 
             if (isStudentView) {
-                // 관리자 모드 진입 시 QR 코드 생성
                 const url = window.location.href;
                 document.getElementById('current-url-text').innerText = url;
                 if (!qrcodeInstance) {
                     qrcodeInstance = new QRCode(document.getElementById("qrcode"), {
-                        text: url,
-                        width: 180,
-                        height: 180,
-                        colorDark : "#4f46e5",
-                        colorLight : "#ffffff",
-                        correctLevel : QRCode.CorrectLevel.H
+                        text: url, width: 180, height: 180, colorDark : "#4f46e5", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H
                     });
                 }
             }
-        } else if(pass !== null) { 
-            alert("비밀번호 오류"); 
-        }
+        } else if(pass !== null) { alert("비밀번호 오류"); }
     };
 
-    // 엑셀 저장
     document.getElementById('export-btn').onclick = () => {
         let csv = "\uFEFF날짜,시간,학년,반,번호,이름,전화번호,증상,상태,상세내용\n";
         visits.forEach(v => {
@@ -382,11 +367,7 @@
         link.click();
     };
 
-    // 실시간 시계
-    setInterval(() => { 
-        document.getElementById('current-time').innerText = new Date().toLocaleString(); 
-    }, 1000);
-
+    setInterval(() => { document.getElementById('current-time').innerText = new Date().toLocaleString(); }, 1000);
 </script>
 </body>
 </html>
