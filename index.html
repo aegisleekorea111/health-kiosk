@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보건실 스마트 키오스크</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QR 코드 생성을 위한 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', 'Malgun Gothic', sans-serif; }
+        .symptom-btn.active { border-color: #f43f5e; background-color: #fff1f2; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .status-completed { opacity: 0.6; background-color: #f8fafc; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+
+<div id="app" class="max-w-4xl mx-auto p-4 md:p-8">
+    <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div class="flex items-center gap-3">
+            <div class="bg-rose-500 text-white p-3 rounded-xl">
+                <i class="fas fa-plus-square text-2xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">보건실 스마트 키오스크</h1>
+                <p class="text-sm text-slate-500" id="current-time"></p>
+            </div>
+        </div>
+        <button id="toggle-mode-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold transition-colors no-print">
+            <i class="fas fa-lock-open mr-2"></i>선생님 모드
+        </button>
+    </header>
+
+    <main id="student-view" class="space-y-6">
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+            <div class="bg-rose-500 p-6 text-white text-center">
+                <h2 class="text-3xl font-bold mb-2">안녕하세요! 👋</h2>
+                <p class="opacity-90">방문 목적과 정보를 입력해 주세요.</p>
+            </div>
+            
+            <div class="p-8 space-y-8">
+                <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 ml-1">학년</label>
+                        <select id="s-grade" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none">
+                            <option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 ml-1">반</label>
+                        <input id="s-class" type="number" placeholder="반" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 ml-1">번호</label>
+                        <input id="s-number" type="number" placeholder="번호" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 ml-1">이름</label>
+                        <input id="s-name" type="text" placeholder="이름" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none">
+                    </div>
+                </section>
+
+                <section>
+                    <label class="block text-sm font-semibold mb-4 ml-1">주요 증상</label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="symptoms-grid">
+                        <button onclick="selectSymptom('두통/어지러움')" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2 transition-all">
+                            <i class="fas fa-head-side-virus text-2xl text-rose-400"></i><span class="font-semibold text-sm">두통/어지러움</span>
+                        </button>
+                        <button onclick="selectSymptom('복통/소화불량')" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2 transition-all">
+                            <i class="fas fa-stomach text-2xl text-rose-400"></i><span class="font-semibold text-sm">복통/소화불량</span>
+                        </button>
+                        <button onclick="selectSymptom('발열/감기')" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2 transition-all">
+                            <i class="fas fa-temperature-high text-2xl text-rose-400"></i><span class="font-semibold text-sm">발열/감기</span>
+                        </button>
+                        <button onclick="selectSymptom('상처/출혈')" class="symptom-btn p-4 border-2 border-slate-100 rounded-2xl bg-white hover:border-rose-200 flex flex-col items-center gap-2 transition-all">
+                            <i class="fas fa-band-aid text-2xl text-rose-400"></i><span class="font-semibold text-sm">상처/출혈</span>
+                        </button>
+                    </div>
+                </section>
+
+                <section>
+                    <label class="block text-sm font-semibold mb-2 ml-1">상세 내용</label>
+                    <textarea id="s-detail" rows="3" placeholder="예: 체육시간에 넘어져서 무릎이 까졌어요." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none resize-none"></textarea>
+                </section>
+
+                <button id="submit-btn" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-6 rounded-2xl text-xl shadow-lg transition-all flex justify-center items-center gap-3">
+                    <i class="fas fa-paper-plane"></i> 접수하기
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <main id="admin-view" class="hidden space-y-6">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <h2 class="text-xl font-bold">실시간 진료 대기 명단</h2>
+            <div class="flex gap-2 no-print">
+                <button id="show-qr-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
+                    <i class="fas fa-qrcode"></i> 학생접수용 QR코드
+                </button>
+                <button id="export-btn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
+                    <i class="fas fa-file-excel"></i> 엑셀 저장
+                </button>
+                <button id="clear-all-btn" class="bg-slate-200 hover:bg-rose-500 hover:text-white text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                    초기화
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="p-4 font-semibold text-sm">시간</th>
+                            <th class="p-4 font-semibold text-sm">학적</th>
+                            <th class="p-4 font-semibold text-sm">이름</th>
+                            <th class="p-4 font-semibold text-sm">증상</th>
+                            <th class="p-4 font-semibold text-sm text-center">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="visit-list" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="modal-container" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative">
+        <div id="modal-icon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"></div>
+        <h3 id="modal-title" class="text-xl font-bold mb-2"></h3>
+        <p id="modal-desc" class="text-slate-500 mb-6"></p>
+        
+        <div id="qr-display-area" class="hidden mb-6 flex flex-col items-center">
+            <div id="qrcode-box" class="p-4 bg-white border border-slate-200 rounded-xl mb-4"></div>
+            <input id="qr-url-input" type="text" placeholder="GitHub 주소를 입력하세요" class="w-full p-2 border rounded-lg text-xs mb-2">
+            <button id="qr-update-btn" class="text-xs text-indigo-600 font-bold underline">주소로 QR 갱신</button>
+        </div>
+
+        <button id="modal-close-btn" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold">닫기</button>
+    </div>
+</div>
+
+<script>
+let visits = JSON.parse(localStorage.getItem('health_visits') || '[]');
+let currentSymptom = "";
+
+function updateTime() {
+    const now = new Date();
+    document.getElementById('current-time').innerText = now.toLocaleString('ko-KR', {
+        month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit'
+    });
+}
+
+function selectSymptom(name) {
+    currentSymptom = name;
+    document.querySelectorAll('.symptom-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.includes(name));
+    });
+}
+
+function showModal(title, desc, type, isQR = false) {
+    const modal = document.getElementById('modal-container');
+    const icon = document.getElementById('modal-icon');
+    const qrArea = document.getElementById('qr-display-area');
+    
+    document.getElementById('modal-title').innerText = title;
+    document.getElementById('modal-desc').innerText = desc;
+    
+    if(type === 'success') {
+        icon.className = "w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl";
+        icon.innerHTML = '<i class="fas fa-check"></i>';
+    } else {
+        icon.className = "w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl";
+        icon.innerHTML = '<i class="fas fa-exclamation"></i>';
+    }
+
+    qrArea.classList.toggle('hidden', !isQR);
+    modal.classList.remove('hidden');
+}
+
+function renderVisits() {
+    const list = document.getElementById('visit-list');
+    list.innerHTML = visits.length ? '' : '<tr><td colspan="5" class="p-10 text-center text-slate-400">접수 내역이 없습니다.</td></tr>';
+    
+    [...visits].reverse().forEach((v, idx) => {
+        const realIdx = visits.length - 1 - idx;
+        const tr = document.createElement('tr');
+        tr.className = v.done ? 'status-completed' : '';
+        tr.innerHTML = `
+            <td class="p-4 text-xs text-slate-500">${v.time}</td>
+            <td class="p-4 text-sm font-medium">${v.grade}-${v.classNum}-${v.number}</td>
+            <td class="p-4 text-sm font-bold">${v.name}</td>
+            <td class="p-4"><span class="px-2 py-1 bg-rose-50 text-rose-600 text-xs rounded-lg">${v.symptom}</span></td>
+            <td class="p-4 text-center">
+                <button onclick="toggleDone(${realIdx})" class="text-xs font-bold ${v.done ? 'text-slate-400' : 'text-indigo-600'}">
+                    ${v.done ? '완료됨' : '진료완료'}
+                </button>
+            </td>
+        `;
+        list.appendChild(tr);
+    });
+}
+
+function toggleDone(idx) {
+    visits[idx].done = !visits[idx].done;
+    saveData();
+}
+
+function saveData() {
+    localStorage.setItem('health_visits', JSON.stringify(visits));
+    renderVisits();
+}
+
+// 이벤트 리스너 등록
+window.onload = () => {
+    updateTime();
+    setInterval(updateTime, 1000);
+    renderVisits();
+
+    document.getElementById('submit-btn').onclick = () => {
+        const grade = document.getElementById('s-grade').value;
+        const classNum = document.getElementById('s-class').value;
+        const number = document.getElementById('s-number').value;
+        const name = document.getElementById('s-name').value;
+        const detail = document.getElementById('s-detail').value;
+
+        if(!classNum || !number || !name || !currentSymptom) {
+            return showModal("입력 부족", "모든 정보를 입력해 주세요.", "error");
+        }
+
+        visits.push({
+            time: new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'}),
+            grade, classNum, number, name, symptom: currentSymptom, detail, done: false
+        });
+        
+        saveData();
+        showModal("접수 완료", "보건 선생님을 기다려 주세요!", "success");
+        // 필드 초기화
+        document.getElementById('s-class').value = '';
+        document.getElementById('s-number').value = '';
+        document.getElementById('s-name').value = '';
+        document.getElementById('s-detail').value = '';
+    };
+
+    document.getElementById('toggle-mode-btn').onclick = function() {
+        const isAdmin = document.getElementById('admin-view').classList.toggle('hidden');
+        document.getElementById('student-view').classList.toggle('hidden');
+        this.innerHTML = isAdmin ? '<i class="fas fa-lock-open mr-2"></i>선생님 모드' : '<i class="fas fa-user-graduate mr-2"></i>학생 모드';
+    };
+
+    document.getElementById('modal-close-btn').onclick = () => document.getElementById('modal-container').classList.add('hidden');
+
+    document.getElementById('show-qr-btn').onclick = () => {
+        const currentUrl = window.location.href;
+        document.getElementById('qr-url-input').value = currentUrl;
+        document.getElementById('qrcode-box').innerHTML = "";
+        new QRCode(document.getElementById('qrcode-box'), { text: currentUrl, width: 150, height: 150 });
+        showModal("접수용 QR코드", "학생들이 스캔하여 접속합니다.", "success", true);
+    };
+
+    document.getElementById('qr-update-btn').onclick = () => {
+        const newUrl = document.getElementById('qr-url-input').value;
+        document.getElementById('qrcode-box').innerHTML = "";
+        new QRCode(document.getElementById('qrcode-box'), { text: newUrl, width: 150, height: 150 });
+    };
+
+    document.getElementById('export-btn').onclick = () => {
+        let csv = "\uFEFF날짜,학적,이름,증상,상태\n";
+        visits.forEach(v => {
+            csv += `${v.time},${v.grade}학년 ${v.classNum}반 ${v.number}번,${v.name},${v.symptom},${v.done?'완료':'대기'}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `보건실_방문기록_${new Date().toLocaleDateString()}.csv`;
+        link.click();
+    };
+
+    document.getElementById('clear-all-btn').onclick = () => {
+        if(confirm("모든 기록을 삭제하시겠습니까?")) {
+            visits = [];
+            saveData();
+        }
+    };
+};
+</script>
+</body>
+</html>
